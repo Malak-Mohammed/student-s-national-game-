@@ -1,0 +1,1061 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" class="h-[100dvh] overflow-hidden">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>مسابقة: تاريخ عماننا الحبيبة</title>
+  
+  <!-- استدعاء خطوط عربية واضحة وأنيقة (Tajawal & Amiri) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@700&family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+  
+  <!-- مكتبة Tailwind CSS للتصميم المتجاوب -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- مكتبة الاحتفالات (Confetti) عند إتمام المسابقة -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            omanRed: '#C8102E',
+            omanRedDark: '#960B22',
+            omanGreen: '#007A3D',
+            omanGreenDark: '#00562B',
+            omanSand: '#FAF6EE',
+            omanSandDark: '#EFE7D8',
+            omanGold: '#C59B27',
+            omanGoldLight: '#EAD17D',
+          },
+          fontFamily: {
+            sans: ['Tajawal', 'sans-serif'],
+            serif: ['Amiri', 'serif'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* ضبط box-sizing وتثبيت أبعاد الشاشة لمنع أي قص سفلي أو تمرير على جميع الأجهزة */
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      height: 100dvh;
+      max-height: 100dvh;
+      width: 100%;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      font-family: 'Tajawal', sans-serif;
+      background-color: #FAF6EE;
+      background-image: 
+        radial-gradient(rgba(197, 155, 39, 0.16) 1.5px, transparent 1.5px),
+        radial-gradient(rgba(0, 122, 61, 0.08) 1.5px, #FAF6EE 1.5px);
+      background-size: 28px 28px;
+      background-position: 0 0, 14px 14px;
+      color: #1F2937;
+    }
+
+    /* الحاوية الهيكلية الصارمة التي تضمن بقاء كل العناصر داخل 100dvh */
+    .app-shell {
+      height: 100%;
+      max-height: 100%;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: clamp(4px, 1vh, 10px);
+      padding: clamp(6px, 1.2vh, 14px) clamp(10px, 2vw, 20px);
+      overflow: hidden;
+    }
+
+    header.top-bar {
+      flex-shrink: 0;
+    }
+
+    main.stage {
+      flex: 1 1 auto;
+      min-height: 0;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+    }
+
+    .screen-wrapper {
+      width: 100%;
+      max-width: 46rem;
+      height: 100%;
+      max-height: 100%;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .screen.active {
+      height: 100%;
+      max-height: 100%;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      overflow: hidden;
+    }
+
+    /* إطار الشهادة المزخرف بالألوان العمانية والذهبية */
+    .certificate-frame {
+      background: linear-gradient(135deg, #FFFFFF 0%, #FDFBF7 100%);
+      border: clamp(3px, 0.65vh, 7px) double #C59B27;
+      box-shadow: 
+        inset 0 0 0 2px #007A3D,
+        inset 0 0 0 5px #FFFFFF,
+        inset 0 0 0 7px #C8102E,
+        0 8px 20px -4px rgba(0, 0, 0, 0.12);
+      position: relative;
+      flex: 1 1 auto;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      overflow: hidden;
+    }
+
+    /* حركات انتقال ناعمة */
+    @keyframes fadeSlideUp {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .animate-screen {
+      animation: fadeSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    /* قاعدة أمان للشاشات ذات الارتفاع المنخفض جداً (مثل اللابتوب الصغير أو الشاشة المقسمة) */
+    @media (max-height: 620px) {
+      .app-shell {
+        gap: 4px;
+        padding: 4px 10px;
+      }
+      .compact-hide-short {
+        display: none !important;
+      }
+      .short-tight-py {
+        padding-top: 4px !important;
+        padding-bottom: 4px !important;
+      }
+      .short-tight-gap {
+        gap: 4px !important;
+      }
+    }
+
+    /* تنسيق خاص للطباعة لعزل الشهادة وإظهارها بأبهى صورة كاملة الصفحة */
+    @media print {
+      html, body {
+        height: auto !important;
+        max-height: none !important;
+        overflow: visible !important;
+        background: #FFFFFF !important;
+      }
+      body * {
+        visibility: hidden;
+      }
+      #certificate-print-area, #certificate-print-area * {
+        visibility: visible;
+      }
+      #certificate-print-area {
+        position: fixed;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: auto;
+        margin: 0;
+        padding: 16px;
+        box-shadow: none !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+      .no-print {
+        display: none !important;
+      }
+    }
+  </style>
+</head>
+<body class="select-none sm:select-auto selection:bg-omanGold selection:text-white">
+
+  <div class="app-shell">
+    <!-- الشريط العلوي المدمج بهوية سلطنة عمان -->
+    <header class="top-bar w-full max-w-[46rem] mx-auto bg-white/95 backdrop-blur-md rounded-xl sm:rounded-2xl border border-omanGold/70 shadow-xs overflow-hidden no-print">
+      <!-- شريط ألوان العلم العماني الرفيع -->
+      <div class="h-1 w-full flex">
+        <div class="w-1/3 bg-omanRed"></div>
+        <div class="w-1/3 bg-white"></div>
+        <div class="w-1/3 bg-omanGreen"></div>
+      </div>
+
+      <div class="px-3 sm:px-4 py-[clamp(4px,0.8vh,8px)] flex items-center justify-between gap-2">
+        <!-- الشعار الرسمي (يمين الهيدر): image/logo.png -->
+        <div class="flex items-center shrink-0">
+          <img 
+            id="header-logo-right"
+            src="image/logo.png" 
+            alt="شعار المسابقة" 
+            class="h-[clamp(28px,4.5vh,40px)] w-[clamp(28px,4.5vh,40px)] object-contain rounded-lg hidden"
+            onload="this.classList.remove('hidden'); document.getElementById('header-fallback-right').classList.add('hidden');"
+            onerror="this.classList.add('hidden');"
+          />
+          <!-- أيقونة بديلة أنيقة تظهر تلقائياً في حال عدم توفر image/logo.png -->
+          <div id="header-fallback-right" class="h-[clamp(28px,4.5vh,40px)] w-[clamp(28px,4.5vh,40px)] rounded-xl bg-gradient-to-br from-omanRed to-omanRedDark text-white flex items-center justify-center shadow-xs border border-omanGold/60">
+            <svg class="w-4 h-4 sm:w-5 sm:h-5 text-omanGoldLight" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 2L14.5 7L19 5.5L17 11H7L5 5.5L9.5 7L12 2Z" />
+              <path stroke-linecap="round" stroke-linejoin="round" d="M8 14C8 17.5 11 20 15 21C13 18.5 12.5 16.5 13 14H8Z" />
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 12H18" />
+            </svg>
+          </div>
+        </div>
+
+        <!-- عنوان المسابقة في المنتصف -->
+        <div class="text-center flex-1 min-w-0 flex flex-col items-center justify-center">
+          <div class="flex items-center gap-1.5">
+            <h1 class="text-[clamp(0.95rem,2.3vh,1.35rem)] font-black text-omanRed leading-tight truncate">
+              تاريخ عماننا الحبيبة
+            </h1>
+            <span class="hidden min-[400px]:inline-block text-[clamp(0.62rem,1.3vh,0.75rem)] font-bold text-omanGreen bg-omanGreen/10 px-2 py-0.5 rounded-full leading-none shrink-0">
+              مسابقة الطالبات 🇴🇲
+            </span>
+          </div>
+        </div>
+
+        <!-- أيقونة القلعة العمانية التراثية (يسار الهيدر) -->
+        <div class="flex items-center shrink-0">
+          <div class="h-[clamp(28px,4.5vh,40px)] w-[clamp(28px,4.5vh,40px)] rounded-xl bg-gradient-to-br from-omanGreen to-omanGreenDark text-white flex items-center justify-center shadow-xs border border-omanGold/60">
+            <svg class="w-4 h-4 sm:w-5 sm:h-5 text-omanGoldLight" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4 21V9L6 7V4H8V6H10V4H14V6H16V4H18V7L20 9V21H4Z" />
+              <path stroke-linecap="round" stroke-linejoin="round" d="M10 21V15C10 13.8954 10.8954 13 12 13C13.1046 13 14 13.8954 14 15V21" />
+            </svg>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- المحتوى الرئيسي المتكيف بالكامل مع ارتفاع الشاشة -->
+    <main class="stage">
+      <div class="screen-wrapper">
+
+        <!-- ========================================================= -->
+        <!-- الشاشة الأولى: تسجيل بيانات الطالبة وبداية المسابقة         -->
+        <!-- ========================================================= -->
+        <section id="screen-start" class="screen active animate-screen bg-white rounded-2xl sm:rounded-3xl shadow-lg border-2 border-omanGold/50">
+          <!-- ترويسة البطاقة -->
+          <div class="bg-gradient-to-l from-omanRed via-omanRedDark to-omanGreen px-4 py-[clamp(8px,1.6vh,16px)] text-white text-center shrink-0">
+            <div class="inline-flex items-center gap-1.5 bg-white/15 backdrop-blur-sm border border-white/25 px-2.5 py-0.5 rounded-full text-[clamp(0.68rem,1.4vh,0.8rem)] font-bold mb-0.5">
+              <span>🇴🇲</span>
+              <span>أهلاً بكِ يا مبدعة عُمان</span>
+            </div>
+            <h2 class="text-[clamp(1.05rem,2.6vh,1.55rem)] font-black leading-tight">
+              مسابقة: تاريخ عماننا الحبيبة
+            </h2>
+            <p class="compact-hide-short text-white/90 text-[clamp(0.72rem,1.6vh,0.9rem)] max-w-lg mx-auto mt-0.5 leading-snug">
+              اختبري معلوماتكِ الشيّقة حول أمجاد عُمان وتاريخها العريق في 5 أسئلة ممتعة!
+            </p>
+          </div>
+
+          <!-- محتوى البطاقة والنموذج -->
+          <div class="px-4 py-[clamp(8px,1.5vh,18px)] flex-1 min-h-0 flex flex-col justify-evenly gap-[clamp(6px,1.2vh,14px)]">
+            <!-- إعلان الجائزة التحفيزية للطالبات -->
+            <div class="bg-gradient-to-r from-amber-50 via-omanSand to-amber-50 border border-omanGold rounded-xl p-[clamp(6px,1.2vh,12px)] flex items-center gap-2.5 shrink-0">
+              <div class="w-[clamp(32px,4.8vh,42px)] h-[clamp(32px,4.8vh,42px)] rounded-xl bg-omanGold text-white flex items-center justify-center text-[clamp(1rem,2.4vh,1.4rem)] shrink-0 shadow-xs">
+                🎁
+              </div>
+              <div class="min-w-0">
+                <h3 class="font-extrabold text-omanRed text-[clamp(0.78rem,1.7vh,0.95rem)] leading-tight">
+                  جائزة الأسرع والأذكى!
+                </h3>
+                <p class="text-gray-800 text-[clamp(0.7rem,1.55vh,0.86rem)] font-semibold leading-snug mt-0.5">
+                  أول <span class="text-omanGreen font-black underline decoration-omanGold decoration-2">طالبتين</span> تُكملان المسابقة وتُرسلان الشهادة أو لقطة الشاشة تفوزان بـ <span class="text-omanRed font-black">قسيمة شرائية</span>!
+                </p>
+              </div>
+            </div>
+
+            <!-- نموذج إدخال اسم الطالبة -->
+            <form id="registration-form" class="flex flex-col gap-[clamp(6px,1.2vh,12px)] min-h-0" novalidate>
+              <div>
+                <label for="student-name" class="block text-[clamp(0.75rem,1.65vh,0.9rem)] font-bold text-gray-800 mb-0.5">
+                  اسم الطالبة الثلاثي <span class="text-omanRed font-black">*</span>
+                </label>
+                <input 
+                  type="text" 
+                  id="student-name" 
+                  name="student-name"
+                  placeholder="مثال: مريم بنت سالم الحارثية"
+                  autocomplete="name"
+                  required
+                  class="w-full px-3 py-[clamp(6px,1.1vh,10px)] rounded-xl border-2 border-gray-200 bg-omanSand/40 focus:bg-white focus:border-omanGreen focus:ring-2 focus:ring-omanGreen/20 outline-none transition-all text-[clamp(0.8rem,1.8vh,0.98rem)] font-bold text-gray-900 placeholder:text-gray-400"
+                />
+                <p id="name-error" class="hidden mt-0.5 text-[clamp(0.68rem,1.4vh,0.78rem)] font-bold text-omanRed bg-red-50 border border-red-200 rounded-lg px-2 py-0.5 flex items-center gap-1">
+                  <span>⚠️</span>
+                  <span>فضلاً اكتبي اسمكِ أولاً ليظهر في شهادة التفوق!</span>
+                </p>
+              </div>
+
+              <div>
+                <label for="student-grade" class="block text-[clamp(0.72rem,1.55vh,0.85rem)] font-bold text-gray-700 mb-0.5">
+                  الصف الدراسي <span class="text-[0.7rem] font-normal text-gray-500"></span>
+                </label>
+                <input 
+                  type="text" 
+                  id="student-grade" 
+                  name="student-grade"
+                  placeholder="مثال: الصف السادس / 2"
+                  class="w-full px-3 py-[clamp(6px,1.1vh,10px)] rounded-xl border-2 border-gray-200 bg-omanSand/40 focus:bg-white focus:border-omanGold focus:ring-2 focus:ring-omanGold/20 outline-none transition-all text-[clamp(0.78rem,1.7vh,0.95rem)] font-semibold text-gray-900 placeholder:text-gray-400"
+                />
+              </div>
+
+              <button 
+                type="submit" 
+                class="w-full py-[clamp(8px,1.4vh,12px)] px-5 rounded-xl bg-gradient-to-l from-omanGreen to-omanGreenDark hover:from-omanGreenDark hover:to-omanGreen text-white font-extrabold text-[clamp(0.88rem,2vh,1.1rem)] shadow-md shadow-omanGreen/25 transform active:scale-[0.99] transition-all flex items-center justify-center gap-2 cursor-pointer shrink-0"
+              >
+                <span>ابدئي المسابقة الآن</span>
+                <svg class="w-4 h-4 sm:w-5 sm:h-5 rotate-180" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                </svg>
+              </button>
+            </form>
+          </div>
+        </section>
+
+        <!-- ========================================================= -->
+        <!-- الشاشة الثانية: الأسئلة التفاعلية (5 أسئلة - بدون تمدد)     -->
+        <!-- ========================================================= -->
+        <section id="screen-quiz" class="screen hidden animate-screen bg-white rounded-2xl sm:rounded-3xl shadow-lg border-2 border-omanGold/50">
+          <!-- شريط معلومات الطالبة والتقدم -->
+          <div class="bg-omanSand border-b border-omanGold/30 px-3.5 py-[clamp(6px,1vh,10px)] shrink-0">
+            <div class="flex items-center justify-between gap-2 mb-1">
+              <div class="flex items-center gap-1.5 min-w-0">
+                <span class="w-6 h-6 rounded-full bg-omanRed text-white font-bold text-xs flex items-center justify-center shrink-0">
+                  👩‍🎓
+                </span>
+                <p id="quiz-student-display" class="text-[clamp(0.75rem,1.7vh,0.92rem)] font-extrabold text-gray-900 truncate"></p>
+              </div>
+
+              <div class="flex items-center gap-2 shrink-0">
+                <span id="question-counter-text" class="text-[clamp(0.7rem,1.5vh,0.82rem)] font-bold text-gray-700 bg-white/80 px-2 py-0.5 rounded-md border border-gray-200">
+                  السؤال 1 من 5
+                </span>
+                <span class="bg-white border border-omanGold/70 px-2 py-0.5 rounded-md text-[clamp(0.72rem,1.6vh,0.85rem)] font-extrabold text-omanGreen">
+                  الدرجة: <span id="live-score" class="text-omanRed">0</span> / 100
+                </span>
+              </div>
+            </div>
+
+            <div class="w-full h-1.5 bg-gray-200 rounded-full overflow-hidden">
+              <div id="progress-bar" class="h-full bg-gradient-to-l from-omanRed via-omanGold to-omanGreen rounded-full transition-all duration-500" style="width: 20%"></div>
+            </div>
+          </div>
+
+          <!-- جسم بطاقة السؤال -->
+          <div class="px-3.5 sm:px-5 py-[clamp(8px,1.4vh,14px)] flex-1 min-h-0 flex flex-col justify-between gap-[clamp(6px,1.1vh,12px)]">
+            <!-- رأس ونص السؤال -->
+            <div class="shrink-0">
+              <div class="flex items-center justify-between gap-2 mb-1">
+                <span id="question-badge" class="inline-block bg-omanRed/10 text-omanRed text-[clamp(0.65rem,1.4vh,0.78rem)] font-extrabold px-2.5 py-0.5 rounded-full">
+                  تاريخ وحضارة
+                </span>
+                <span class="inline-block bg-amber-50 border border-omanGold/60 text-omanGreenDark text-[clamp(0.65rem,1.4vh,0.78rem)] font-extrabold px-2.5 py-0.5 rounded-full">
+                  ⭐ 20 درجة
+                </span>
+              </div>
+              <h3 id="question-text" class="text-[clamp(0.88rem,2.1vh,1.2rem)] font-black text-gray-900 leading-snug">
+                <!-- نص السؤال -->
+              </h3>
+            </div>
+
+            <!-- شبكة الخيارات الأربعة (2x2 على الشاشات >= 480px وعمود واحد على الشاشات الضيقة) -->
+            <div id="options-container" class="grid grid-cols-1 min-[480px]:grid-cols-2 gap-[clamp(5px,1.1vh,12px)] my-auto min-h-0">
+              <!-- الأزرار تُنشأ ديناميكياً -->
+            </div>
+
+            <!-- شريط سفلي موحد ثابت الارتفاع لمنع أي تمدد عمودي عند ظهور التغذية الراجعة -->
+            <div class="shrink-0 min-h-[clamp(44px,6.8vh,56px)] flex items-center justify-between gap-2 rounded-xl px-2.5 py-[clamp(4px,0.8vh,8px)] border border-omanGold/40 bg-omanSand/50 transition-colors" id="quiz-footer-bar">
+              <!-- رسالة التلميح الافتراضية قبل الإجابة -->
+              <div id="quiz-hint-text" class="flex items-center gap-1.5 text-[clamp(0.72rem,1.55vh,0.86rem)] font-bold text-gray-600">
+                <span>✨</span>
+                <span>اختاري الإجابة الصحيحة للحصول على 20 درجة!</span>
+              </div>
+
+              <!-- التغذية الراجعة المختصرة بعد الإجابة -->
+              <div id="feedback-box" class="hidden flex-1 min-w-0 flex items-center gap-2">
+                <span id="feedback-icon" class="text-base sm:text-lg shrink-0 leading-none"></span>
+                <div class="min-w-0 flex-1">
+                  <p id="feedback-title" class="font-extrabold text-[clamp(0.72rem,1.55vh,0.88rem)] leading-tight truncate"></p>
+                  <p id="feedback-fact" class="text-[clamp(0.66rem,1.4vh,0.78rem)] font-medium text-gray-700 leading-tight line-clamp-2"></p>
+                </div>
+              </div>
+
+              <!-- زر السؤال التالي -->
+              <button 
+                id="next-btn" 
+                type="button"
+                class="hidden shrink-0 py-[clamp(6px,1vh,9px)] px-3.5 sm:px-4 rounded-lg bg-omanRed hover:bg-omanRedDark text-white font-extrabold text-[clamp(0.76rem,1.7vh,0.92rem)] shadow-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                <span id="next-btn-text">السؤال التالي</span>
+                <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 rotate-180" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- ========================================================= -->
+        <!-- الشاشة الثالثة: النتيجة وشهادة التفوق القابلة للحفظ والطباعة -->
+        <!-- ========================================================= -->
+        <section id="screen-result" class="screen hidden animate-screen gap-[clamp(5px,1vh,10px)]">
+          
+          <!-- شريط تهنئة مدمج وتذكير بالقسيمة -->
+          <div class="no-print shrink-0 bg-gradient-to-l from-omanGreen to-omanGreenDark text-white rounded-xl px-3 py-[clamp(5px,0.9vh,9px)] shadow-sm border border-omanGold">
+            <div class="flex items-center justify-between gap-2">
+              <div class="flex items-center gap-1.5 min-w-0">
+                <span class="text-base sm:text-lg shrink-0">🏆</span>
+                <p class="text-[clamp(0.74rem,1.65vh,0.92rem)] font-black text-omanGoldLight truncate">
+                  مبارك يا <span id="congrats-name" class="underline"></span>!
+                  <span id="motivational-message" class="text-white/95 font-semibold text-[clamp(0.68rem,1.45vh,0.82rem)] mr-1"></span>
+                </p>
+              </div>
+              <span id="summary-score-badge" class="bg-omanRed px-2 py-0.5 rounded-md font-black text-white text-[clamp(0.7rem,1.55vh,0.85rem)] shrink-0">
+                100 / 100
+              </span>
+            </div>
+            <p class="mt-0.5 text-[clamp(0.64rem,1.35vh,0.76rem)] font-bold text-amber-100 leading-tight truncate">
+              📸 <strong>للفوز بالقسيمة:</strong> احفظي الشهادة أو التقطي لقطة شاشة وأرسليها لمعلمتكِ فوراً (أول طالبتين تفوزان 🎁)
+            </p>
+          </div>
+
+          <!-- ========================================================= -->
+          <!-- تصميم شهادة التفوق والإنجاز الرسمية المدمجة للشاشة        -->
+          <!-- ========================================================= -->
+          <div id="certificate-print-area" class="flex-1 min-h-0 w-full flex items-center justify-center">
+            <div id="certificate-card" class="certificate-frame w-full h-full rounded-xl sm:rounded-2xl px-3.5 sm:px-6 py-[clamp(6px,1.2vh,14px)] text-center">
+              
+              <!-- زخارف الزوايا الذهبية -->
+              <div class="absolute top-1.5 right-1.5 w-5 h-5 sm:w-7 sm:h-7 border-t-2 border-r-2 border-omanGold rounded-tr pointer-events-none"></div>
+              <div class="absolute top-1.5 left-1.5 w-5 h-5 sm:w-7 sm:h-7 border-t-2 border-l-2 border-omanGold rounded-tl pointer-events-none"></div>
+              <div class="absolute bottom-1.5 right-1.5 w-5 h-5 sm:w-7 sm:h-7 border-b-2 border-r-2 border-omanGold rounded-br pointer-events-none"></div>
+              <div class="absolute bottom-1.5 left-1.5 w-5 h-5 sm:w-7 sm:h-7 border-b-2 border-l-2 border-omanGold rounded-bl pointer-events-none"></div>
+
+              <!-- ترويسة الشهادة والشعار -->
+              <div class="flex items-center justify-between gap-2 shrink-0">
+                <!-- شعار الشهادة الأيمن: image/logo.png -->
+                <div class="w-[clamp(34px,5.2vh,48px)] h-[clamp(34px,5.2vh,48px)] flex items-center justify-center shrink-0">
+                  <img 
+                    id="cert-logo-right"
+                    src="image/logo.png" 
+                    alt="شعار المسابقة" 
+                    class="max-h-full max-w-full object-contain hidden"
+                    onload="this.classList.remove('hidden'); document.getElementById('cert-fallback-right').classList.add('hidden');"
+                    onerror="this.classList.add('hidden');"
+                  />
+                  <div id="cert-fallback-right" class="w-full h-full rounded-full bg-omanSand border border-omanGold flex flex-col items-center justify-center text-omanRed">
+                    <span class="text-sm sm:text-base leading-none">🇴🇲</span>
+                    <span class="text-[7px] font-extrabold text-omanGreen">عُمان</span>
+                  </div>
+                </div>
+
+                <!-- البسملة والعنوان الرسمي -->
+                <div class="flex-1 min-w-0">
+                  <p class="font-serif text-[clamp(0.68rem,1.45vh,0.85rem)] text-omanGreen font-bold leading-none mb-0.5">
+                    بسم الله الرحمن الرحيم
+                  </p>
+                  <div class="inline-block bg-gradient-to-l from-omanRed via-omanRedDark to-omanRed text-white px-3.5 py-0.5 rounded-full">
+                    <h2 class="text-[clamp(0.85rem,2vh,1.2rem)] font-black tracking-wide leading-tight">
+                      شهادة تفوق وإنجاز
+                    </h2>
+                  </div>
+                </div>
+
+                <!-- وسام التفوق الأيسر -->
+                <div class="w-[clamp(34px,5.2vh,48px)] h-[clamp(34px,5.2vh,48px)] flex items-center justify-center shrink-0">
+                  <div class="w-full h-full rounded-full bg-omanSand border border-omanGold flex flex-col items-center justify-center text-omanGold">
+                    <span class="text-sm sm:text-base leading-none">🏅</span>
+                    <span class="text-[7px] font-extrabold text-omanRed">تفوق</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- نص الشهادة واسم الطالبة -->
+              <div class="my-auto py-0.5 flex flex-col justify-center gap-[clamp(2px,0.6vh,6px)] min-h-0">
+                <p class="text-[clamp(0.68rem,1.45vh,0.85rem)] text-gray-600 font-bold leading-tight">
+                  تتقدم إدارة المسابقة بخالص التهنئة والتقدير إلى الطالبة المتميزة:
+                </p>
+
+                <!-- اسم الطالبة الفائزة -->
+                <div class="py-0.5 px-3 mx-auto max-w-md border-b border-dashed border-omanGold">
+                  <p id="cert-student-name" class="text-[clamp(1rem,2.6vh,1.5rem)] font-black text-omanRed leading-tight truncate">
+                    <!-- اسم الطالبة -->
+                  </p>
+                  <p id="cert-student-grade" class="text-[clamp(0.64rem,1.35vh,0.78rem)] font-bold text-omanGreen leading-none mt-0.5 hidden">
+                    <!-- الصف الدراسي -->
+                  </p>
+                </div>
+
+                <p class="text-[clamp(0.66rem,1.4vh,0.82rem)] text-gray-700 font-semibold leading-snug max-w-lg mx-auto">
+                  وذلك لاجتيازها بنجاح مسابقة
+                  <span class="font-black text-omanGreen">«تاريخ عماننا الحبيبة»</span>
+                  معبّرةً عن اعتزازها بتاريخ وطنها العريق.
+                </p>
+
+                <!-- شارات النتيجة والتقدير والتاريخ -->
+                <div class="flex items-center justify-center gap-2 pt-0.5">
+                  <div class="bg-omanSand border border-omanGold/60 rounded-lg px-2 py-0.5">
+                    <span class="text-[9px] text-gray-500 block font-bold leading-none">النتيجة (20 لكل سؤال)</span>
+                    <span id="cert-score" class="text-[clamp(0.72rem,1.6vh,0.9rem)] font-black text-omanRed">100 / 100 درجة</span>
+                  </div>
+                  <div class="bg-omanSand border border-omanGold/60 rounded-lg px-2 py-0.5">
+                    <span class="text-[9px] text-gray-500 block font-bold leading-none">التقدير</span>
+                    <span id="cert-grade-label" class="text-[clamp(0.72rem,1.6vh,0.9rem)] font-black text-omanGreen">ممتاز</span>
+                  </div>
+                  <div class="bg-omanSand border border-omanGold/60 rounded-lg px-2 py-0.5">
+                    <span class="text-[9px] text-gray-500 block font-bold leading-none">التاريخ</span>
+                    <span id="cert-date" class="text-[clamp(0.68rem,1.5vh,0.82rem)] font-extrabold text-gray-800"></span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- تذييل الشهادة والتواقيع -->
+              <div class="pt-1 border-t border-omanGold/30 grid grid-cols-3 items-center text-[clamp(0.64rem,1.35vh,0.78rem)] font-bold text-gray-700 shrink-0">
+                <div>
+                  <p class="text-omanGreen leading-tight">المعلمة المشرفة</p>
+                  <p class="text-gray-400 font-normal leading-none">..............</p>
+                </div>
+
+                <!-- ختم المسابقة الذهبي -->
+                <div class="flex justify-center">
+                  <div class="w-[clamp(36px,5.4vh,46px)] h-[clamp(36px,5.4vh,46px)] rounded-full border border-dashed border-omanGold bg-amber-50/90 flex flex-col items-center justify-center rotate-[-6deg]">
+                    <span class="text-[7px] sm:text-[8px] font-black text-omanRed leading-none">تاريخ عُماننا</span>
+                    <span class="text-[10px] leading-none">⭐</span>
+                    <span class="text-[7px] font-bold text-omanGreen leading-none">معتمد</span>
+                  </div>
+                </div>
+
+                <div>
+                  <p class="text-omanGreen leading-tight">إدارة المدرسة</p>
+                  <p class="text-gray-400 font-normal leading-none">..............</p>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- أزرار الإجراءات السفلية (حفظ PNG، طباعة، إعادة المحاولة) -->
+          <div class="no-print shrink-0 grid grid-cols-3 gap-2">
+            <button 
+              id="download-png-btn"
+              type="button"
+              class="py-[clamp(6px,1.1vh,10px)] px-2 rounded-xl bg-omanRed hover:bg-omanRedDark text-white font-extrabold text-[clamp(0.68rem,1.5vh,0.84rem)] shadow-xs transition-all flex items-center justify-center gap-1 cursor-pointer"
+            >
+              <span>📥 حفظ الشهادة (PNG)</span>
+            </button>
+
+            <button 
+              id="print-cert-btn"
+              type="button"
+              class="py-[clamp(6px,1.1vh,10px)] px-2 rounded-xl bg-white hover:bg-omanSand text-omanGreen border border-omanGreen font-extrabold text-[clamp(0.68rem,1.5vh,0.84rem)] transition-all flex items-center justify-center gap-1 cursor-pointer"
+            >
+              <span>🖨️ طباعة / حفظ PDF</span>
+            </button>
+
+            <button 
+              id="restart-btn"
+              type="button"
+              class="py-[clamp(6px,1.1vh,10px)] px-2 rounded-xl bg-white hover:bg-gray-100 text-gray-700 border border-gray-300 font-extrabold text-[clamp(0.68rem,1.5vh,0.84rem)] transition-all flex items-center justify-center gap-1 cursor-pointer"
+            >
+              <span>🔄 إعادة المحاولة</span>
+            </button>
+          </div>
+
+        </section>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- منطق المسابقة التفاعلية وتوليد الشهادة كصورة عالية الجودة             -->
+  <!-- ===================================================================== -->
+  <script>
+    // مسار الشعار الأساسي
+    const LOGO_SRC = "image/logo.png";
+
+    function applyLogos() {
+      if (LOGO_SRC) {
+        document.getElementById('header-logo-right').src = LOGO_SRC;
+        document.getElementById('cert-logo-right').src = LOGO_SRC;
+      }
+    }
+
+    // أسئلة المسابقة الخمسة المبسطة والممتعة حول تاريخ عُمان
+    const QUESTIONS = [
+      {
+        category: "حضارات عُمان القديمة",
+        question: "ما الاسم التاريخي القديم الذي اشتهرت به سلطنة عُمان قديماً لصناعة السفن وتصدير النحاس؟",
+        options: ["مَجان", "دلمون", "سبأ", "تدمر"],
+        correctIndex: 0,
+        fact: "عُرفت عُمان قديماً باسم «مجان» أي أرض النحاس، واشتهرت بصناعة السفن والتجارة البحرية."
+      },
+      {
+        category: "المعالم التاريخية",
+        question: "تُعدّ من أشهر القلاع في سلطنة عُمان وتتميز ببرجها الدائري الضخم، في أي ولاية تقع؟",
+        options: ["ولاية صلالة", "ولاية نزوى", "ولاية صور", "ولاية صحار"],
+        correctIndex: 1,
+        fact: "قلعة نزوى بناها الإمام سلطان بن سيف اليعربي في القرن السابع عشر الميلادي، وتُعدّ تحفة معمارية."
+      },
+      {
+        category: "أعلام الملاحة العُمانية",
+        question: "من هو الملاح والبحّار العُماني الشهير الذي لُقّب بـ «أسد البحار»؟",
+        options: ["ابن بطوطة", "أحمد بن ماجد", "الخليل بن أحمد الفراهيدي", "جابر بن زيد"],
+        correctIndex: 1,
+        fact: "أحمد بن ماجد ملاح عُماني فذّ ألف كتباً عديدة في علوم البحار والفلك والملاحة."
+      },
+      {
+        category: "الدولة البوسعيدية",
+        question: "من هو مؤسس الدولة البوسعيدية في سلطنة عُمان عام 1744م؟",
+        options: ["الإمام أحمد بن سعيد", "السيد سعيد بن سلطان", "السلطان قابوس بن سعيد", "الإمام ناصر بن مرشد"],
+        correctIndex: 0,
+        fact: "أسس الإمام أحمد بن سعيد البوسعيدي الدولة البوسعيدية، ووحد البلاد وحمى سواحلها."
+      },
+      {
+        category: "التراث العالمي في عُمان",
+        question: "نظام ريّ عُماني عريق أُدرج ضمن قائمة التراث العالمي لليونسكو، فما هو؟",
+        options: ["السدود الحديثة", "الأفلاج العُمانية", "القنوات المعلقة", "الآبار الارتوازية"],
+        correctIndex: 1,
+        fact: "تُعدّ الأفلاج العُمانية شاهداً حياً على براعة الإنسان العُماني في هندسة المياه والري."
+      }
+    ];
+
+    // ثوابت الدرجات
+    const POINTS_PER_QUESTION = 20;
+    const TOTAL_MARKS = QUESTIONS.length * POINTS_PER_QUESTION;
+
+    // متغيرات حالة المسابقة
+    let studentName = "";
+    let studentGrade = "";
+    let currentQuestionIndex = 0;
+    let score = 0;
+    let hasAnsweredCurrent = false;
+
+    // عناصر الواجهة
+    const screenStart = document.getElementById('screen-start');
+    const screenQuiz = document.getElementById('screen-quiz');
+    const screenResult = document.getElementById('screen-result');
+
+    const regForm = document.getElementById('registration-form');
+    const nameInput = document.getElementById('student-name');
+    const gradeInput = document.getElementById('student-grade');
+    const nameError = document.getElementById('name-error');
+
+    const quizStudentDisplay = document.getElementById('quiz-student-display');
+    const liveScoreEl = document.getElementById('live-score');
+    const questionCounterText = document.getElementById('question-counter-text');
+    const progressBar = document.getElementById('progress-bar');
+
+    const questionBadge = document.getElementById('question-badge');
+    const questionText = document.getElementById('question-text');
+    const optionsContainer = document.getElementById('options-container');
+
+    const quizFooterBar = document.getElementById('quiz-footer-bar');
+    const quizHintText = document.getElementById('quiz-hint-text');
+    const feedbackBox = document.getElementById('feedback-box');
+    const feedbackIcon = document.getElementById('feedback-icon');
+    const feedbackTitle = document.getElementById('feedback-title');
+    const feedbackFact = document.getElementById('feedback-fact');
+    const nextBtn = document.getElementById('next-btn');
+    const nextBtnText = document.getElementById('next-btn-text');
+
+    function switchScreen(hideEl, showEl) {
+      hideEl.classList.add('hidden');
+      hideEl.classList.remove('active');
+      showEl.classList.remove('hidden');
+      showEl.classList.add('active');
+    }
+
+    nameInput.addEventListener('input', () => {
+      if (nameInput.value.trim().length > 0) {
+        nameError.classList.add('hidden');
+        nameInput.classList.remove('border-omanRed');
+      }
+    });
+
+    regForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const enteredName = nameInput.value.trim();
+
+      if (!enteredName) {
+        nameError.classList.remove('hidden');
+        nameInput.classList.add('border-omanRed');
+        nameInput.focus();
+        return;
+      }
+
+      studentName = enteredName;
+      studentGrade = gradeInput.value.trim();
+      currentQuestionIndex = 0;
+      score = 0;
+
+      quizStudentDisplay.textContent = studentName;
+      liveScoreEl.textContent = "0";
+
+      switchScreen(screenStart, screenQuiz);
+      renderQuestion();
+    });
+
+    function renderQuestion() {
+      hasAnsweredCurrent = false;
+      const q = QUESTIONS[currentQuestionIndex];
+      const qNumber = currentQuestionIndex + 1;
+      const total = QUESTIONS.length;
+      const percent = Math.round((qNumber / total) * 100);
+
+      questionCounterText.textContent = `السؤال ${qNumber} من ${total}`;
+      progressBar.style.width = `${percent}%`;
+
+      questionBadge.textContent = q.category;
+      questionText.textContent = q.question;
+
+      // إعادة ضبط الشريط السفلي الموحد بدون تغيير ارتفاعه
+      quizFooterBar.className = "shrink-0 min-h-[clamp(44px,6.8vh,56px)] flex items-center justify-between gap-2 rounded-xl px-2.5 py-[clamp(4px,0.8vh,8px)] border border-omanGold/40 bg-omanSand/50 transition-colors";
+      quizHintText.classList.remove('hidden');
+      feedbackBox.classList.add('hidden');
+      nextBtn.classList.add('hidden');
+      nextBtnText.textContent = (qNumber === total) ? "النتيجة والشهادة 🏆" : "التالي";
+
+      optionsContainer.innerHTML = "";
+      const arabicLetters = ["أ", "ب", "ج", "د"];
+
+      q.options.forEach((optionText, idx) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = "option-btn w-full text-right px-[clamp(10px,1.5vw,16px)] py-[clamp(6px,1.2vh,12px)] rounded-xl border-2 border-gray-200 bg-omanSand/35 hover:bg-omanSand hover:border-omanGold transition-all flex items-center gap-2 group cursor-pointer";
+        btn.innerHTML = `
+          <span class="option-letter w-[clamp(24px,3.6vh,32px)] h-[clamp(24px,3.6vh,32px)] rounded-lg bg-white border border-gray-300 group-hover:border-omanGold group-hover:bg-omanGold group-hover:text-white font-black text-[clamp(0.72rem,1.5vh,0.88rem)] flex items-center justify-center shrink-0 transition-colors">
+            ${arabicLetters[idx]}
+          </span>
+          <span class="font-bold text-[clamp(0.78rem,1.8vh,0.98rem)] text-gray-800 flex-1 leading-tight">${optionText}</span>
+          <span class="option-status text-sm shrink-0"></span>
+        `;
+
+        btn.addEventListener('click', () => handleAnswerSelection(idx));
+        optionsContainer.appendChild(btn);
+      });
+    }
+
+    function handleAnswerSelection(selectedIndex) {
+      if (hasAnsweredCurrent) return;
+      hasAnsweredCurrent = true;
+
+      const q = QUESTIONS[currentQuestionIndex];
+      const isCorrect = selectedIndex === q.correctIndex;
+      const allButtons = optionsContainer.querySelectorAll('.option-btn');
+
+      allButtons.forEach((btn, idx) => {
+        btn.disabled = true;
+        btn.classList.remove('hover:bg-omanSand', 'hover:border-omanGold', 'cursor-pointer');
+        btn.classList.add('cursor-default');
+
+        const statusSpan = btn.querySelector('.option-status');
+        const letterSpan = btn.querySelector('.option-letter');
+
+        if (idx === q.correctIndex) {
+          btn.classList.remove('border-gray-200', 'bg-omanSand/35');
+          btn.classList.add('border-omanGreen', 'bg-emerald-50');
+          letterSpan.classList.remove('bg-white', 'border-gray-300');
+          letterSpan.classList.add('bg-omanGreen', 'text-white', 'border-omanGreen');
+          statusSpan.textContent = '✅';
+        } else if (idx === selectedIndex && !isCorrect) {
+          btn.classList.remove('border-gray-200', 'bg-omanSand/35');
+          btn.classList.add('border-omanRed', 'bg-red-50');
+          letterSpan.classList.remove('bg-white', 'border-gray-300');
+          letterSpan.classList.add('bg-omanRed', 'text-white', 'border-omanRed');
+          statusSpan.textContent = '❌';
+        } else {
+          btn.classList.add('opacity-55');
+        }
+      });
+
+      quizHintText.classList.add('hidden');
+      feedbackBox.classList.remove('hidden');
+
+      if (isCorrect) {
+        score += POINTS_PER_QUESTION;
+        liveScoreEl.textContent = score;
+        quizFooterBar.className = "shrink-0 min-h-[clamp(44px,6.8vh,56px)] flex items-center justify-between gap-2 rounded-xl px-2.5 py-[clamp(4px,0.8vh,8px)] border-2 border-omanGreen bg-emerald-50 transition-colors";
+        feedbackIcon.textContent = '🌟';
+        feedbackTitle.textContent = 'إجابة صحيحة (+20 درجة)! أحسنتِ';
+        feedbackTitle.className = 'font-extrabold text-[clamp(0.72rem,1.55vh,0.88rem)] text-omanGreenDark leading-tight truncate';
+      } else {
+        quizFooterBar.className = "shrink-0 min-h-[clamp(44px,6.8vh,56px)] flex items-center justify-between gap-2 rounded-xl px-2.5 py-[clamp(4px,0.8vh,8px)] border-2 border-omanGold bg-amber-50 transition-colors";
+        feedbackIcon.textContent = '💡';
+        feedbackTitle.textContent = `الصحيح: ${q.options[q.correctIndex]}`;
+        feedbackTitle.className = 'font-extrabold text-[clamp(0.72rem,1.55vh,0.88rem)] text-omanRed leading-tight truncate';
+      }
+
+      feedbackFact.textContent = q.fact;
+      nextBtn.classList.remove('hidden');
+    }
+
+    nextBtn.addEventListener('click', () => {
+      currentQuestionIndex++;
+      if (currentQuestionIndex < QUESTIONS.length) {
+        renderQuestion();
+      } else {
+        showResultsAndCertificate();
+      }
+    });
+
+    function showResultsAndCertificate() {
+      switchScreen(screenQuiz, screenResult);
+
+      document.getElementById('congrats-name').textContent = studentName;
+      document.getElementById('summary-score-badge').textContent = `${score} / ${TOTAL_MARKS} درجة`;
+      document.getElementById('cert-student-name').textContent = studentName;
+
+      const certGradeEl = document.getElementById('cert-student-grade');
+      if (studentGrade) {
+        certGradeEl.textContent = `الصف الدراسي: ${studentGrade}`;
+        certGradeEl.classList.remove('hidden');
+      } else {
+        certGradeEl.classList.add('hidden');
+      }
+
+      document.getElementById('cert-score').textContent = `${score} / ${TOTAL_MARKS} درجة`;
+
+      let gradeLabel = "ممتاز";
+      if (score === 100) gradeLabel = "ممتاز مع مرتبة الشرف";
+      else if (score >= 80) gradeLabel = "ممتاز";
+      else if (score >= 60) gradeLabel = "جيد جداً";
+      else gradeLabel = "مشاركة متميزة";
+      document.getElementById('cert-grade-label').textContent = gradeLabel;
+
+      const msgEl = document.getElementById('motivational-message');
+      if (score === 100) {
+        msgEl.textContent = "علامة كاملة (100/100) تدل على ثقافتكِ العالية!";
+      } else if (score >= 60) {
+        msgEl.textContent = "أداء رائع ومشرّف في تاريخ سلطنة عُمان!";
+      } else {
+        msgEl.textContent = "مشاركة جميلة ومعلومات قيّمة عن وطننا عُمان!";
+      }
+
+      const today = new Date();
+      document.getElementById('cert-date').textContent = today.toLocaleDateString('ar-OM', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      });
+
+      launchOmaniCelebration();
+    }
+
+    function launchOmaniCelebration() {
+      if (typeof confetti !== 'function') return;
+      const omaniColors = ['#C8102E', '#007A3D', '#C59B27', '#FFFFFF'];
+      confetti({
+        particleCount: 80,
+        spread: 70,
+        origin: { y: 0.6 },
+        colors: omaniColors
+      });
+    }
+
+    document.getElementById('print-cert-btn').addEventListener('click', () => {
+      window.print();
+    });
+
+    document.getElementById('download-png-btn').addEventListener('click', () => {
+      generateCertificatePNG(true);
+    });
+
+    function drawCertificateBackgroundAndText(ctx, width, height) {
+      const grad = ctx.createLinearGradient(0, 0, width, height);
+      grad.addColorStop(0, '#FFFFFF');
+      grad.addColorStop(1, '#FAF6EE');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, width, height);
+
+      ctx.strokeStyle = '#C59B27';
+      ctx.lineWidth = 14;
+      ctx.strokeRect(28, 28, width - 56, height - 56);
+
+      ctx.strokeStyle = '#007A3D';
+      ctx.lineWidth = 6;
+      ctx.strokeRect(46, 46, width - 92, height - 92);
+
+      ctx.strokeStyle = '#C8102E';
+      ctx.lineWidth = 4;
+      ctx.strokeRect(58, 58, width - 116, height - 116);
+
+      ctx.textAlign = 'center';
+      ctx.direction = 'rtl';
+
+      ctx.fillStyle = '#007A3D';
+      ctx.font = 'bold 26px Amiri, Tajawal, sans-serif';
+      ctx.fillText('بسم الله الرحمن الرحيم', width / 2, 125);
+
+      const titleBoxW = 420;
+      const titleBoxH = 58;
+      ctx.fillStyle = '#C8102E';
+      roundRect(ctx, (width - titleBoxW) / 2, 148, titleBoxW, titleBoxH, 29);
+      ctx.fill();
+
+      ctx.fillStyle = '#FFFFFF';
+      ctx.font = '900 32px Tajawal, sans-serif';
+      ctx.fillText('شهادة تفوق وإنجاز', width / 2, 188);
+
+      ctx.fillStyle = '#4B5563';
+      ctx.font = 'bold 24px Tajawal, sans-serif';
+      ctx.fillText('تتقدم إدارة المسابقة بخالص التهنئة والتقدير إلى الطالبة المتميزة:', width / 2, 265);
+
+      ctx.fillStyle = '#C8102E';
+      ctx.font = '900 44px Tajawal, sans-serif';
+      ctx.fillText(studentName, width / 2, 338);
+
+      ctx.save();
+      ctx.setLineDash([10, 8]);
+      ctx.strokeStyle = '#C59B27';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(width / 2 - 260, 360);
+      ctx.lineTo(width / 2 + 260, 360);
+      ctx.stroke();
+      ctx.restore();
+
+      let nextY = 405;
+      if (studentGrade) {
+        ctx.fillStyle = '#007A3D';
+        ctx.font = 'bold 22px Tajawal, sans-serif';
+        ctx.fillText(`الصف الدراسي: ${studentGrade}`, width / 2, 395);
+        nextY = 440;
+      }
+
+      ctx.fillStyle = '#374151';
+      ctx.font = 'bold 23px Tajawal, sans-serif';
+      ctx.fillText('وذلك لمشاركتها الفاعلة واجتيازها بنجاح مسابقة «تاريخ عماننا الحبيبة»', width / 2, nextY);
+      ctx.fillText('معبّرةً عن اعتزازها بتاريخ وطنها العريق وحضارته الأصيلة.', width / 2, nextY + 38);
+
+      const boxY = nextY + 80;
+      const gradeText = document.getElementById('cert-grade-label').textContent;
+      const dateText = document.getElementById('cert-date').textContent;
+
+      drawInfoBox(ctx, width / 2 + 190, boxY, 240, 88, 'النتيجة المحققة', `${score} / ${TOTAL_MARKS} درجة`, '#C8102E');
+      drawInfoBox(ctx, width / 2 - 120, boxY, 240, 88, 'التقدير', gradeText, '#007A3D');
+      drawInfoBox(ctx, width / 2 - 430, boxY, 240, 88, 'التاريخ', dateText, '#1F2937');
+
+      const footerY = height - 115;
+      ctx.fillStyle = '#007A3D';
+      ctx.font = 'bold 21px Tajawal, sans-serif';
+      ctx.fillText('المعلمة المشرفة', width - 220, footerY);
+      ctx.fillText('إدارة المدرسة', 220, footerY);
+
+      ctx.fillStyle = '#9CA3AF';
+      ctx.fillText('......................', width - 220, footerY + 35);
+      ctx.fillText('......................', 220, footerY + 35);
+
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(width / 2, footerY + 10, 48, 0, Math.PI * 2);
+      ctx.fillStyle = '#FFFBEB';
+      ctx.fill();
+      ctx.setLineDash([6, 4]);
+      ctx.strokeStyle = '#C59B27';
+      ctx.lineWidth = 3;
+      ctx.stroke();
+      ctx.restore();
+
+      ctx.fillStyle = '#C8102E';
+      ctx.font = '900 15px Tajawal, sans-serif';
+      ctx.fillText('تاريخ عُماننا', width / 2, footerY + 2);
+      ctx.fillStyle = '#007A3D';
+      ctx.font = 'bold 14px Tajawal, sans-serif';
+      ctx.fillText('معتمد ⭐', width / 2, footerY + 26);
+    }
+
+    function generateCertificatePNG(includeLogos) {
+      const canvas = document.createElement('canvas');
+      const width = 1200;
+      const height = 850;
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+
+      drawCertificateBackgroundAndText(ctx, width, height);
+
+      if (includeLogos) {
+        const rightLogoImg = document.getElementById('cert-logo-right');
+        try {
+          if (rightLogoImg && !rightLogoImg.classList.contains('hidden') && rightLogoImg.complete && rightLogoImg.naturalWidth > 0) {
+            ctx.drawImage(rightLogoImg, width - 210, 90, 110, 110);
+          }
+        } catch (logoErr) {
+          console.warn('تم تخطي رسم الشعار على اللوحة:', logoErr);
+        }
+      }
+
+      try {
+        const dataUrl = canvas.toDataURL('image/png');
+        const link = document.createElement('a');
+        const safeFileName = studentName.replace(/\s+/g, '_');
+        link.download = `شهادة_تاريخ_عماننا_${safeFileName}.png`;
+        link.href = dataUrl;
+        link.click();
+      } catch (secErr) {
+        if (includeLogos) {
+          generateCertificatePNG(false);
+        }
+      }
+    }
+
+    function roundRect(ctx, x, y, w, h, r) {
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.arcTo(x + w, y, x + w, y + h, r);
+      ctx.arcTo(x + w, y + h, x, y + h, r);
+      ctx.arcTo(x, y + h, x, y, r);
+      ctx.arcTo(x, y, x + w, y, r);
+      ctx.closePath();
+    }
+
+    function drawInfoBox(ctx, x, y, w, h, label, value, valueColor) {
+      ctx.fillStyle = '#FAF6EE';
+      roundRect(ctx, x, y, w, h, 16);
+      ctx.fill();
+      ctx.strokeStyle = '#C59B27';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      ctx.fillStyle = '#6B7280';
+      ctx.font = 'bold 17px Tajawal, sans-serif';
+      ctx.fillText(label, x + w / 2, y + 32);
+
+      ctx.fillStyle = valueColor;
+      ctx.font = '900 22px Tajawal, sans-serif';
+      ctx.fillText(value, x + w / 2, y + 66);
+    }
+
+    document.getElementById('restart-btn').addEventListener('click', () => {
+      nameInput.value = '';
+      gradeInput.value = '';
+      switchScreen(screenResult, screenStart);
+      nameInput.focus();
+    });
+
+    window.addEventListener('DOMContentLoaded', applyLogos);
+  </script>
+</body>
+</html>
